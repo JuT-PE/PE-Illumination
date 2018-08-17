@@ -14,8 +14,6 @@ LedIllum::LedIllum(){
 
 void LedIllum::init(void){
     // set pin mode 
-//    MCUCR |= (1<<JTD); 
-//    MCUCR |= (1<<JTD);
     pwm_config(PWM187k);  
     pinMode(PinVIS_EN, OUTPUT);
     pinMode(PinIR_EN,  OUTPUT);
@@ -306,9 +304,22 @@ void LedIllum::pwm_config(int mode){
     // Default to High output
     PORTB |= _BV(PB5);
     
-    // Configure portF
-//    DDRF  |= _BV(PF0) | _BV(PF1) | _BV(PF4) | _BV(PF5) | _BV(PF6) | _BV(PF7);
-//    PORTF &= ~( _BV(PF0) | _BV(PF1) | _BV(PF4) | _BV(PF5) | _BV(PF6) | _BV(PF7) );  
+    // Configure unused pin as input, and set internal pull-up
+    // For LedIllum-V2, these pins are still free, and unconnected.  
+    DDRB &= ~( _BV(PB0) | _BV(PB1) | _BV(PB2) | _BV(PB3) | _BV(PB6) );  // set as input
+    PORTB |= ( _BV(PB0) | _BV(PB1) | _BV(PB2) | _BV(PB3) | _BV(PB6) );  // internal pull-up
+    DDRC &= ~( _BV(PC7) );
+    PORTC |= ( _BV(PC7) );
+    DDRD &= ~( _BV(PD4) );
+    PORTD |= ( _BV(PD4) );
+    DDRE &= ~( _BV(PE6) );
+    PORTE |= ( _BV(PE6) );
+    // PF4, PF5, PF6, PF7 are Jtag Pins, need to be deactivated, otherweise it overrides
+    // I/O operation
+    MCUCR |= (1<<JTD); 
+    MCUCR |= (1<<JTD);
+    DDRF &= ~( _BV(PF4) | _BV(PF5) | _BV(PF6) | _BV(PF7) );
+    PORTF |= ( _BV(PF4) | _BV(PF5) | _BV(PF6) | _BV(PF7) );
     // Ignore 10-bit mode for ease use
     
     // TCCR4C configuration, nothing to configure
@@ -361,11 +372,11 @@ void LedIllum::ramp(int id, int source, int destination, int rampdelay)
             for(i=0; i<((destination-source)/rampstep); i++ ){
                 state = source+(i+1)*rampstep;
                 setPWM(id, state);
-                delay(rampdelay);
+                delayMicroseconds(rampdelay);
             }
             if(state != destination){              // check if we need a last step
                 setPWM(id, destination);
-                delay(rampdelay);
+                delayMicroseconds(rampdelay);
             }
             break;
         
@@ -373,11 +384,11 @@ void LedIllum::ramp(int id, int source, int destination, int rampdelay)
             for(i=0; i<((source-destination)/rampstep); i++ ){
                 state = source-(i+1)*rampstep;
                 setPWM(id, state);
-                delay(rampdelay);
+                delayMicroseconds(rampdelay);
             }
             if(state != destination){              // check if we need a last step
                 setPWM(id, destination);
-                delay(rampdelay);
+                delayMicroseconds(rampdelay);
             }
             break;
                     

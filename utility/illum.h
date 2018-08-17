@@ -43,8 +43,8 @@
 // ramp direction mode
 #define RAMPHIGH          1
 #define RAMPLOW           2
-#define DELAY_DEF         2
-#define DELAY_HALF        1
+#define DELAY_DEF       250 
+#define DELAY_HALF      125 
 
 // initiation value 
 #define INIT_VIS_EN       0
