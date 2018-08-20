@@ -63,7 +63,7 @@ int cmd_getversion(int argc, char *argv[]){
         return RUN_FAIL;
     }
 
-    cmd_printf("led illumination board V2.0.3\n");
+    cmd_printf("led illumination board V2.1.1\n");
     return RUN_SUCCESS;
 }
 
