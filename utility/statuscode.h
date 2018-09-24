@@ -9,8 +9,10 @@
 #define STATUSCODE_H
 
 /* ID definition */
-#define LED_ID_VIS    0x01   ///< visible LED 
-#define LED_ID_IR     0x02   ///< infrared LED
+//#define LED_ID_VIS    0x01   ///< visible LED 
+//#define LED_ID_IR     0x02   ///< infrared LED
+#define LED_ID_IR     0x01  ///< infrared LED address for V2.1.10
+#define LED_ID_VIS    0x02  ///< visible LED address for V2.1.10 
 
 /* Address of components */
 #define LED_AD_EN     0x00  ///< enable address
