@@ -23,22 +23,35 @@
 #define PWM3k       7   //   2930 Hz
 
 // enable pin
-#define PinVIS_EN     2
-#define PinIR_EN      3 
-#define PinVIS_SEG1  A5 
-#define PinVIS_SEG2  A4
-#define PinVIS_SEG3   6 
-#define PinVIS_SEG4   8 
-#define PinIR_SEG1   12
-#define PinIR_SEG2   11 
-#define PinIR_SEG3    0
-#define PinIR_SEG4    1
-#define PinVIS_PWM    5  
-#define PinIR_PWM     9 
+//#define PinVIS_EN     2
+//#define PinIR_EN      3 
+//#define PinVIS_SEG1  A5 
+//#define PinVIS_SEG2  A4
+//#define PinVIS_SEG3   6 
+//#define PinVIS_SEG4   8 
+//#define PinIR_SEG1   12
+//#define PinIR_SEG2   11 
+//#define PinIR_SEG3    0
+//#define PinIR_SEG4    1
+//#define PinVIS_PWM    5  
+//#define PinIR_PWM     9 
+
+#define PinIR_EN       2
+#define PinVIS_EN      3 
+#define PinIR_SEG1    A5 
+#define PinIR_SEG2    A4
+#define PinIR_SEG3     6 
+#define PinIR_SEG4     8 
+#define PinVIS_SEG1   12
+#define PinVIS_SEG2   11 
+#define PinVIS_SEG3    0
+#define PinVIS_SEG4    1
+#define PinIR_PWM      5  
+#define PinVIS_PWM     9 
 
 //direct PWM change register
-#define REG_PWMVIS    OCR4A
-#define REG_PWMIR     OCR4B
+#define REG_PWMIR      OCR4A
+#define REG_PWMVIS     OCR4B
 
 // ramp direction mode
 #define RAMPHIGH          1
