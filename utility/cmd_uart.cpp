@@ -44,6 +44,7 @@
     change prompt and don't show back underline character
 ***************************************************************************/
 #include <avr/pgmspace.h>
+#include <stdlib.h>
 #if ARDUINO >= 100
 #include <Arduino.h>
 #else
@@ -257,7 +258,7 @@ void cmdAdd(const char *name, int (*func)(int argc, char **argv))
     without tracking it in the main program.
 */
 /**************************************************************************/
-Stream* cmdGetStream(void)
+Stream* cmdGetStream()
 {
     return stream;
 }
@@ -293,7 +294,13 @@ void cmd_printf(const char *format, ...)
     different value in base 10 (decimal) and base 16 (hexadecimal).
 */
 /**************************************************************************/
-uint32_t cmdStr2Num(char *str, uint8_t base)
+uint32_t cmdStr2Num(const char *str, uint8_t base)
 {
     return strtol(str, NULL, base);
+}
+
+
+unsigned long cmdStr2ul(const char *str, uint8_t base)
+{
+    return strtoul(str, NULL, base);
 }

@@ -9,7 +9,7 @@
 #ifndef PE_ILLUM_H
 #define PE_ILLUM_H
 
-#include <utility/illum.h>
+#include <utility/illum.h> 
 #include <utility/cmd_uart.h>
 #include <utility/statuscode.h>
 
@@ -50,6 +50,10 @@ void _error_msg(int ret);
  */
 int cmd_getversion(int argc, char *argv[]);
 
+int cmd_lightwr(int argc, char *argv[]);
+
+int cmd_lightrd(int argc, char *argv[]);
+
 /*
  * Command interface for reading operation
  */
@@ -59,6 +63,8 @@ int cmd_ledread(int argc, char *argv[]);
  * Command interface for writing operation
  */
 int cmd_ledwrite(int argc, char *argv[]);
+
+int cmd_lightcode(int argc, char *argv[]);
 
 /*
  *  Instantiation of the available commands

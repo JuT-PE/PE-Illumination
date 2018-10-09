@@ -45,6 +45,8 @@
 
 #define MAX_MSG_SIZE    60
 #include <stdint.h>
+#include <Arduino.h>
+#include "HardwareSerial.h"
 
 // command line structure
 typedef struct _cmd_t
@@ -55,7 +57,7 @@ typedef struct _cmd_t
 } cmd_t;
 
 void cmdInit(Stream *);
-void cmdPoll();
+void cmdPoll(void);
 void cmdAdd(const char *name, int (*func)(int argc, char **argv));
 Stream* cmdGetStream(void);
 
@@ -67,7 +69,8 @@ Stream* cmdGetStream(void);
 *****************************************************************************/
 void cmd_printf(const char *format, ...);
 
+uint32_t cmdStr2Num(const char *str, uint8_t base);
 
-uint32_t cmdStr2Num(char *str, uint8_t base);
+unsigned long cmdStr2ul(const char *str, uint8_t base);
 
 #endif //CMD_LED_H

@@ -1,7 +1,5 @@
-#ifndef ILLUM_H
-#define ILLUM_H
-
-#include <Arduino.h>
+#ifndef LED_GPIO_H
+#define LED_GPIO_H
 
 /* Pin Mapping */
 #define PinIR_EN       2
@@ -46,54 +44,6 @@
 #define PWM6k       6   //   5859 Hz
 #define PWM3k       7   //   2930 Hz
 
-struct SegState_t{   
-    int seg1;
-    int seg2;
-    int seg3;
-    int seg4;
-};                      // Segment states structure
-
-struct LedState_t{
-    int        global;
-    SegState_t segment;
-    int        brightness; 
-};                      // Led states structure
-
-class LedIllum {
-    public: 
-        LedIllum();     // constructor
-        LedState_t VISstate;
-        LedState_t IRstate;
-
-        // functions
-        LedState_t GetVisState(void);
-        LedState_t GetIrState(void); 
-        int SetVisState(LedState_t vis_wanted);
-        int SetIrState(LedState_t ir_wanted);
-
-        int Vis_Enable_Write(int state);
-        int Vis_Pwm_Write(int duty);
-        int Vis_Segment_Write(int segaddr, int value);
-
-        int Vis_Enable_Read(int segaddr, int* value);
-        int Vis_Pwm_Read(int segaddr, int* value);
-        int Vis_Segment_Read(int segaddr, int* value);
-
-        int Ir_Enable_Write(int state);
-        int Ir_Pwm_Write(int duty);
-        int Ir_Segment_Write(int segaddr, int value);
-
-        int Ir_Enable_Read(int segaddr, int* value);
-        int Ir_Pwm_Read(int segaddr, int* value); 
-        int Ir_Segment_Read(int segaddr, int* value);
-
-
-    private:
-        int vis_init(void);
-        int ir_init(void);
-
-};
-
 /* function prototypes */ 
 void pin_init(void);
 
@@ -111,5 +61,5 @@ int pin_ir_seg3_wr(int state);
 int pin_ir_seg4_wr(int state);
 int pin_ir_pwm_ramp(int src, int desti);
 
+#endif /* end of header */ 
 
-#endif /* end of header */
