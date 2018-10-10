@@ -17,8 +17,10 @@
 #define PinIR_PWM      5  
 #define PinVIS_PWM     9 
 
-#define ENABLE         0x1
-#define DISABLE        0x0
+#define ENABLE       0x1
+#define DISABLE      0x0
+#define TURN_ON        1
+#define TURN_OFF       0
 //#define HIGH           1
 //#define LOW            0 
 
@@ -46,6 +48,7 @@
 #define PWM6k       6   //   5859 Hz
 #define PWM3k       7   //   2930 Hz
 
+/* data type definition */
 struct SegState_t{   
     int seg1;
     int seg2;
@@ -71,10 +74,10 @@ class LedIllum {
         int SetVisState(LedState_t vis_wanted);
         int SetIrState(LedState_t ir_wanted);
 
+        // single operation interface
         int Vis_Enable_Write(int state);
         int Vis_Pwm_Write(int duty);
         int Vis_Segment_Write(int segaddr, int value);
-
         int Vis_Enable_Read(int segaddr, int* value);
         int Vis_Pwm_Read(int segaddr, int* value);
         int Vis_Segment_Read(int segaddr, int* value);
@@ -82,11 +85,17 @@ class LedIllum {
         int Ir_Enable_Write(int state);
         int Ir_Pwm_Write(int duty);
         int Ir_Segment_Write(int segaddr, int value);
-
         int Ir_Enable_Read(int segaddr, int* value);
         int Ir_Pwm_Read(int segaddr, int* value); 
         int Ir_Segment_Read(int segaddr, int* value);
 
+        // total operation interface
+        int Update_Vis_Global(int vis_global_wanted);
+        int Update_Vis_Segment(int seg1_w, int seg2_w, int seg3_w, int seg4_w);
+        int Update_Vis_Brightness(int vis_brightness_wanted);
+        int Update_Ir_Global(int ir_global_wanted);
+        int Update_Ir_Segment(int seg1_w, int seg2_w, int seg3_w, int seg4_w);
+        int Update_Ir_Brightness(int ir_brightness_wanted);
 
     private:
         int vis_init(void);

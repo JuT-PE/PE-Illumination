@@ -31,10 +31,10 @@ LedIllum LedCtrl;
 const cmd_tbl_t cmd_tbl[] =
 {
     /* cmd, function, help */
-    { "_getversion"    , cmd_getversion      , "print the version info." },
-    { "_ledwr"         , cmd_ledwrite        , "write LED"},
-    { "_ledrd"         , cmd_ledread         , "read LED"},
-    { "_lightcode"     , cmd_lightcode       , "write or read using light code"},
+    { "getversion"    , cmd_getversion      , "print the version info." },
+    { "ledwr"         , cmd_ledwrite        , "write LED"},
+    { "ledrd"         , cmd_ledread         , "read LED"},
+    { "lightcode"     , cmd_lightcode       , "write or read using light code"},
     { NULL }
 };
 
@@ -71,22 +71,22 @@ int _lightcode_write(unsigned int viscode, unsigned int ircode){
 
     /* parser */ 
     int vis_global_wanted      = (int) ( (viscode>>0)&0x1 );
-    int vis_seg1_wanted = (int) ( (viscode>>1)&0x1 ); 
-    int vis_seg2_wanted = (int) ( (viscode>>2)&0x1 );
-    int vis_seg3_wanted = (int) ( (viscode>>3)&0x1 );
-    int vis_seg4_wanted = (int) ( (viscode>>4)&0x1 );
-    int vis_brightness_wanted       = (int) ( (viscode>>5)&0xFF); 
+    int vis_seg1_wanted        = (int) ( (viscode>>1)&0x1 ); 
+    int vis_seg2_wanted        = (int) ( (viscode>>2)&0x1 );
+    int vis_seg3_wanted        = (int) ( (viscode>>3)&0x1 );
+    int vis_seg4_wanted        = (int) ( (viscode>>4)&0x1 );
+    int vis_brightness_wanted  = (int) ( (viscode>>5)&0xFF); 
 
-    int ir_global_wanted      = (int) ( (ircode>>0)&0x1 );
-    int ir_seg1_wanted = (int) ( (ircode>>1)&0x1 ); 
-    int ir_seg2_wanted = (int) ( (ircode>>2)&0x1 );
-    int ir_seg3_wanted = (int) ( (ircode>>3)&0x1 );
-    int ir_seg4_wanted = (int) ( (ircode>>4)&0x1 );
-    int ir_brightness_wanted       = (int) ( (ircode>>5)&0xFF); 
+    int ir_global_wanted       = (int) ( (ircode>>0)&0x1 );
+    int ir_seg1_wanted         = (int) ( (ircode>>1)&0x1 ); 
+    int ir_seg2_wanted         = (int) ( (ircode>>2)&0x1 );
+    int ir_seg3_wanted         = (int) ( (ircode>>3)&0x1 );
+    int ir_seg4_wanted         = (int) ( (ircode>>4)&0x1 );
+    int ir_brightness_wanted   = (int) ( (ircode>>5)&0xFF); 
    
     /* check range */
-    if( vis_global_wanted==1 ){                      // want to switch on
-        if( ((viscode>>1)&0xF) == 0){              // check segment safety
+    if( vis_global_wanted==1 ){                           // want to switch on
+        if( ((viscode>>1)&0xF) == 0){                     // check segment safety
             return E_SAFETY;
         }
     }
@@ -99,8 +99,47 @@ int _lightcode_write(unsigned int viscode, unsigned int ircode){
     }
     if(ir_brightness_wanted  > 100) { return E_RANGE; }
 
+    /* do operation */
+    ret = LedCtrl.Update_Vis_Global(vis_global_wanted);
+    if(ret!=E_OK){
+        cmd_printf("Error %d: vis en fault\n", ret);  
+        return ret;
+    }
+
+    ret = LedCtrl.Update_Vis_Segment(vis_seg1_wanted, vis_seg2_wanted, vis_seg3_wanted, vis_seg4_wanted);
+    if(ret!=E_OK){
+        cmd_printf("Error %d: vis seg fault %d%d%d%d\n", ret, vis_seg4_wanted, vis_seg3_wanted, vis_seg2_wanted, vis_seg1_wanted);
+        return ret;
+    }
+
+    ret = LedCtrl.Update_Vis_Brightness(vis_brightness_wanted);
+    if(ret!=E_OK){
+        cmd_printf("Error %d: vis pwm fault %d\n", ret, vis_brightness_wanted); 
+        return ret;
+    }
+
+    ret = LedCtrl.Update_Ir_Global(ir_global_wanted);
+    if(ret!=E_OK){
+        cmd_printf("Error %d: ir en fault\n", ret);
+        return ret;
+    }
+
+    ret = LedCtrl.Update_Ir_Segment(ir_seg1_wanted, ir_seg2_wanted, ir_seg3_wanted, ir_seg4_wanted);
+    if(ret!=E_OK){
+        cmd_printf("Error %d: ir seg fault %d%d%d%d\n", ret, ir_seg4_wanted, ir_seg3_wanted, ir_seg2_wanted, ir_seg1_wanted);
+        return ret;
+    }
+
+    ret = LedCtrl.Update_Ir_Brightness(ir_brightness_wanted);
+    if(ret!=E_OK){
+        cmd_printf("Error %d: ir pwm fault %d\n", ret, ir_brightness_wanted); 
+        return ret;
+    }
+
+    return E_OK;
+
     /* VIS: check if change is needed, if so, do it */
-    if(vis_global_wanted != LedCtrl.VISstate.global) { 
+/*    if(vis_global_wanted != LedCtrl.VISstate.global) { 
         ret = _vis_write(LED_AD_EN, vis_global_wanted);
         if(ret!=E_OK){ 
             _error_log_write(LED_ID_VIS, LED_AD_EN, vis_global_wanted);
@@ -148,7 +187,7 @@ int _lightcode_write(unsigned int viscode, unsigned int ircode){
         }
     }
 
-    /* IR: check if change is needed, if so, do it */
+    // IR: check if change is needed, if so, do it 
 
     if(ir_global_wanted != LedCtrl.IRstate.global) { 
         ret = _ir_write(LED_AD_EN, ir_global_wanted);
@@ -196,7 +235,7 @@ int _lightcode_write(unsigned int viscode, unsigned int ircode){
             _error_log_write(LED_ID_IR, LED_AD_PWM, ir_brightness_wanted);
             return ret;
         }
-    }
+    }*/
 
     return E_OK; 
 }
@@ -210,18 +249,20 @@ unsigned int _vis_lightcode_read(void)
     unsigned int vis_seg4_code = (unsigned int) ((LedCtrl.VISstate.segment.seg4 &0x1)<<4 );
     unsigned int vis_pwm_code  = (unsigned int) ((LedCtrl.VISstate.brightness   &0xFF)<<5 );
 
+    cmd_printf("VIS: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.VISstate.brightness, LedCtrl.VISstate.segment.seg4, LedCtrl.VISstate.segment.seg3, LedCtrl.VISstate.segment.seg2, LedCtrl.VISstate.segment.seg1, LedCtrl.VISstate.global);
     return (vis_en_code | vis_seg1_code | vis_seg2_code | vis_seg3_code | vis_seg4_code | vis_pwm_code);  
 }
 
 unsigned int _ir_lightcode_read(void)
 {
-    unsigned int ir_en_code   = (unsigned int) ((LedCtrl.IRstate.global      &0x1)<<0 );
+    unsigned int ir_en_code   = (unsigned int) ((LedCtrl.IRstate.global       &0x1)<<0 );
     unsigned int ir_seg1_code = (unsigned int) ((LedCtrl.IRstate.segment.seg1 &0x1)<<1 ); 
     unsigned int ir_seg2_code = (unsigned int) ((LedCtrl.IRstate.segment.seg2 &0x1)<<2 );
     unsigned int ir_seg3_code = (unsigned int) ((LedCtrl.IRstate.segment.seg3 &0x1)<<3 );
     unsigned int ir_seg4_code = (unsigned int) ((LedCtrl.IRstate.segment.seg4 &0x1)<<4 );
-    unsigned int ir_pwm_code  = (unsigned int) ((LedCtrl.IRstate.brightness      &0xFF)<<5 );
+    unsigned int ir_pwm_code  = (unsigned int) ((LedCtrl.IRstate.brightness   &0xFF)<<5 );
 
+    cmd_printf("IR: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.IRstate.brightness, LedCtrl.IRstate.segment.seg4, LedCtrl.IRstate.segment.seg3, LedCtrl.IRstate.segment.seg2, LedCtrl.IRstate.segment.seg1, LedCtrl.IRstate.global);
     return (ir_en_code | ir_seg1_code | ir_seg2_code | ir_seg3_code | ir_seg4_code | ir_pwm_code);  
 }
 
