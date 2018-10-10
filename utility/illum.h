@@ -17,8 +17,8 @@
 #define PinIR_PWM      5  
 #define PinVIS_PWM     9 
 
-#define ENABLE       0x1
-#define DISABLE      0x0
+#define ENABLE         1
+#define DISABLE        0
 #define TURN_ON        1
 #define TURN_OFF       0
 //#define HIGH           1
@@ -67,6 +67,8 @@ class LedIllum {
         LedIllum();     // constructor
         LedState_t VISstate;
         LedState_t IRstate;
+
+        int Init(void);
 
         // functions
         LedState_t GetVisState(void);

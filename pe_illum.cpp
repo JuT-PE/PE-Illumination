@@ -43,7 +43,7 @@ const cmd_tbl_t cmd_tbl[] =
  */
 void cmdInst(void){
     int i = 0;
-//    LedCtrl.init();
+    LedCtrl.Init();
     Serial.begin(115200);
     cmdInit(&Serial);
     
@@ -62,7 +62,7 @@ int cmd_getversion(int argc, char *argv[]){
         return RUN_FAIL;
     }
 
-    cmd_printf("led illumination board V2.1.4\n");
+    cmd_printf("led illumination board V2.1.3\n");
     return RUN_SUCCESS;
 }
 
@@ -148,7 +148,7 @@ unsigned int _vis_lightcode_read(void)
     unsigned int vis_seg4_code = (unsigned int) ((LedCtrl.VISstate.segment.seg4 &0x1)<<4 );
     unsigned int vis_pwm_code  = (unsigned int) ((LedCtrl.VISstate.brightness   &0xFF)<<5 );
 
-    cmd_printf("VIS: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.VISstate.brightness, LedCtrl.VISstate.segment.seg4, LedCtrl.VISstate.segment.seg3, LedCtrl.VISstate.segment.seg2, LedCtrl.VISstate.segment.seg1, LedCtrl.VISstate.global);
+//    cmd_printf("VIS: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.VISstate.brightness, LedCtrl.VISstate.segment.seg4, LedCtrl.VISstate.segment.seg3, LedCtrl.VISstate.segment.seg2, LedCtrl.VISstate.segment.seg1, LedCtrl.VISstate.global);
     return (vis_en_code | vis_seg1_code | vis_seg2_code | vis_seg3_code | vis_seg4_code | vis_pwm_code);  
 }
 
@@ -161,7 +161,7 @@ unsigned int _ir_lightcode_read(void)
     unsigned int ir_seg4_code = (unsigned int) ((LedCtrl.IRstate.segment.seg4 &0x1)<<4 );
     unsigned int ir_pwm_code  = (unsigned int) ((LedCtrl.IRstate.brightness   &0xFF)<<5 );
 
-    cmd_printf("IR: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.IRstate.brightness, LedCtrl.IRstate.segment.seg4, LedCtrl.IRstate.segment.seg3, LedCtrl.IRstate.segment.seg2, LedCtrl.IRstate.segment.seg1, LedCtrl.IRstate.global);
+//    cmd_printf("IR: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.IRstate.brightness, LedCtrl.IRstate.segment.seg4, LedCtrl.IRstate.segment.seg3, LedCtrl.IRstate.segment.seg2, LedCtrl.IRstate.segment.seg1, LedCtrl.IRstate.global);
     return (ir_en_code | ir_seg1_code | ir_seg2_code | ir_seg3_code | ir_seg4_code | ir_pwm_code);  
 }
 

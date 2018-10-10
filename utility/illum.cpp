@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "utility/illum.h" 
 #include "cmd_uart.h"
 #include "utility/statuscode.h"
@@ -9,6 +10,13 @@ static void _setPWM(int id, int duty);
 
 LedIllum::LedIllum()
 {
+//    pin_init();
+//    vis_init();
+//    ir_init();
+}
+
+int LedIllum::Init(void)
+{
     pin_init();
     vis_init();
     ir_init();
@@ -16,6 +24,12 @@ LedIllum::LedIllum()
 
 int LedIllum::vis_init(void) 
 {
+    pinMode(PinVIS_EN, OUTPUT);
+    pinMode(PinVIS_SEG1, OUTPUT);
+    pinMode(PinVIS_SEG2, OUTPUT);
+    pinMode(PinVIS_SEG3, OUTPUT);
+    pinMode(PinVIS_SEG4, OUTPUT);
+    pinMode(PinVIS_PWM, OUTPUT);
     pin_vis_global_wr(DISABLE);
     pin_vis_seg1_wr(ENABLE);
     pin_vis_seg2_wr(ENABLE);
@@ -30,6 +44,12 @@ int LedIllum::vis_init(void)
 
 int LedIllum::ir_init(void)
 {
+    pinMode(PinIR_EN,  OUTPUT);
+    pinMode(PinIR_SEG1, OUTPUT);
+    pinMode(PinIR_SEG2, OUTPUT);
+    pinMode(PinIR_SEG3, OUTPUT);
+    pinMode(PinIR_SEG4, OUTPUT);
+    pinMode(PinIR_PWM, OUTPUT);
     pin_ir_global_wr(DISABLE);
     pin_ir_seg1_wr(ENABLE);
     pin_ir_seg2_wr(ENABLE);
@@ -397,7 +417,7 @@ int pin_vis_global_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=LOW) : (pinstate=HIGH);   // pin converted, LOW means turning on, HIGH means turning off
     digitalWrite(PinVIS_EN, pinstate); 
-    cmd_printf("Vis global enable: %d\n", state);
+//    cmd_printf("Vis global enable: %d\n", state);
     return E_OK;
 } 
 
@@ -406,7 +426,7 @@ int pin_vis_seg1_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinVIS_SEG1, pinstate);
-    cmd_printf("Vis seg1 enable:%d\n", state); 
+//    cmd_printf("Vis seg1 enable:%d\n", state); 
     return E_OK;
 }
 
@@ -415,7 +435,7 @@ int pin_vis_seg2_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinVIS_SEG2, pinstate);
-    cmd_printf("Vis seg2 enable:%d\n", state);
+//    cmd_printf("Vis seg2 enable:%d\n", state);
     return E_OK;
 }
 
@@ -424,7 +444,7 @@ int pin_vis_seg3_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinVIS_SEG3, pinstate);
-    cmd_printf("Vis seg3 enable:%d\n", state);
+//    cmd_printf("Vis seg3 enable:%d\n", state);
     return E_OK;
 }
 
@@ -433,7 +453,7 @@ int pin_vis_seg4_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinVIS_SEG4, pinstate);
-    cmd_printf("Vis seg4 enable:%d\n", state);
+//    cmd_printf("Vis seg4 enable:%d\n", state);
     return E_OK;
 }
 
@@ -442,7 +462,8 @@ int pin_ir_global_wr(int state)
 {
     int pinstate;
     (state==ENABLE) ? (pinstate=LOW) : (pinstate=HIGH);   // pin converted, LOW means turning on, HIGH means turning off  
-    cmd_printf("Ir globle enable:%d\n", state);
+    digitalWrite(PinIR_EN, pinstate);
+//    cmd_printf("Ir global enable:%d\n", state);
     return E_OK;
 }
 
@@ -450,7 +471,8 @@ int pin_ir_seg1_wr(int state)
 {
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
-    cmd_printf("Ir seg1 enable:%d\n", state);
+    digitalWrite(PinIR_SEG1, pinstate);
+//    cmd_printf("Ir seg1 enable:%d\n", state);
     return E_OK;
 }
 
@@ -458,7 +480,8 @@ int pin_ir_seg2_wr(int state)
 {
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
-    cmd_printf("Ir seg2 enable:%d\n", state);
+    digitalWrite(PinIR_SEG2, pinstate);
+//    cmd_printf("Ir seg2 enable:%d\n", state);
     return E_OK; 
 } 
 
@@ -466,7 +489,8 @@ int pin_ir_seg3_wr(int state)
 {
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
-    cmd_printf("Ir seg3 enable:%d\n", state);
+    digitalWrite(PinIR_SEG3, pinstate);
+//    cmd_printf("Ir seg3 enable:%d\n", state);
     return E_OK;
 }
 
@@ -474,20 +498,21 @@ int pin_ir_seg4_wr(int state)
 {
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
-    cmd_printf("Ir seg4 enable:%d\n", state);
+    digitalWrite(PinIR_SEG4, pinstate);
+//    cmd_printf("Ir seg4 enable:%d\n", state);
     return E_OK;
 }
 
 /* visible and infrared pwm */
 int pin_vis_pwm_ramp(int src, int desti)
 {
-    cmd_printf("Vis pwm %d->%d\n", src, desti);
+//    cmd_printf("Vis pwm %d->%d\n", src, desti);
     return _ramp_pwm(LED_ID_VIS, src, desti);
 }
 
 int pin_ir_pwm_ramp(int src, int desti)
 {
-    cmd_printf("Ir pwm %d->%d\n", src, desti);
+//    cmd_printf("Ir pwm %d->%d\n", src, desti);
     return _ramp_pwm(LED_ID_IR, src, desti);
 }
 
@@ -592,7 +617,12 @@ static void _setPWM(int id, int duty)
     int value = 0;
     // for pwm, IC FL7760 is used, need a remapping for the value, 0%-100% remap
     // to 8%-66%
-    value = map(duty, 0, 100, 8, 66);
+    if(duty==0){
+        value = 0;
+    }else{
+        value = map(duty, 1, 100, 10, 66);  
+    }
+
     switch (id){
         case LED_ID_VIS:
             REG_PWMVIS = DUTY2PWM(value);
