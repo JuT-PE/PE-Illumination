@@ -31,10 +31,10 @@ LedIllum LedCtrl;
 const cmd_tbl_t cmd_tbl[] =
 {
     /* cmd, function, help */
-    { "getversion"    , cmd_getversion      , "print the version info." },
-    { "ledwr"         , cmd_ledwrite        , "write LED"},
-    { "ledrd"         , cmd_ledread         , "read LED"},
-    { "lightcode"     , cmd_lightcode       , "write or read using light code"},
+    { "_getversion"    , cmd_getversion      , "print the version info." },
+    { "_ledwr"         , cmd_ledwrite        , "write LED"},
+    { "_ledrd"         , cmd_ledread         , "read LED"},
+    { "_lightcode"     , cmd_lightcode       , "write or read using light code"},
     { NULL }
 };
 
@@ -137,107 +137,6 @@ int _lightcode_write(unsigned int viscode, unsigned int ircode){
     }
 
     return E_OK;
-
-    /* VIS: check if change is needed, if so, do it */
-/*    if(vis_global_wanted != LedCtrl.VISstate.global) { 
-        ret = _vis_write(LED_AD_EN, vis_global_wanted);
-        if(ret!=E_OK){ 
-            _error_log_write(LED_ID_VIS, LED_AD_EN, vis_global_wanted);
-            return ret;
-        }
-    }
-
-    if(vis_seg1_wanted != LedCtrl.VISstate.segment.seg1) { 
-        ret = _vis_write(LED_AD_SEG1, vis_seg1_wanted);
-        if(ret!=E_OK){ 
-            _error_log_write(LED_ID_VIS, LED_AD_SEG1, vis_seg1_wanted);
-            return ret;
-        }
-    }
-
-    if(vis_seg2_wanted != LedCtrl.VISstate.segment.seg2) {
-        ret = _vis_write(LED_AD_SEG2, vis_seg2_wanted);
-        if(ret!=E_OK){
-            _error_log_write(LED_ID_VIS, LED_AD_SEG2, vis_seg2_wanted);
-            return ret;
-        }
-    }
-
-    if(vis_seg3_wanted != LedCtrl.VISstate.segment.seg3) {
-        ret = _vis_write(LED_AD_SEG3, vis_seg3_wanted);
-        if(ret!=E_OK){
-           _error_log_write(LED_ID_VIS, LED_AD_SEG3, vis_seg3_wanted); 
-           return ret;
-        }
-    }
-
-    if(vis_seg4_wanted != LedCtrl.VISstate.segment.seg4) {
-        ret = _vis_write(LED_AD_SEG4, vis_seg4_wanted);
-        if(ret!=E_OK){
-            _error_log_write(LED_ID_VIS, LED_AD_SEG4, vis_seg4_wanted);
-            return ret;
-        }
-    }
-
-    if(vis_brightness_wanted != LedCtrl.VISstate.brightness) {
-        ret = _vis_write(LED_AD_PWM, vis_brightness_wanted);
-        if(ret!=E_OK){
-            _error_log_write(LED_ID_VIS, LED_AD_PWM, vis_brightness_wanted);
-            return ret;
-        }
-    }
-
-    // IR: check if change is needed, if so, do it 
-
-    if(ir_global_wanted != LedCtrl.IRstate.global) { 
-        ret = _ir_write(LED_AD_EN, ir_global_wanted);
-        if(ret!=E_OK){ 
-            _error_log_write(LED_ID_IR, LED_AD_EN, ir_global_wanted);
-            return ret;
-        }
-    }
-
-    if(ir_seg1_wanted != LedCtrl.IRstate.segment.seg1) { 
-        ret = _ir_write(LED_AD_SEG1, ir_seg1_wanted);
-        if(ret!=E_OK){ 
-            _error_log_write(LED_ID_IR, LED_AD_SEG1, ir_seg1_wanted);
-            return ret;
-        }
-    }
-
-    if(ir_seg2_wanted != LedCtrl.IRstate.segment.seg2) {
-        ret = _ir_write(LED_AD_SEG2, ir_seg2_wanted);
-        if(ret!=E_OK){
-            _error_log_write(LED_ID_IR, LED_AD_SEG2, ir_seg2_wanted);
-            return ret;
-        }
-    }
-
-    if(ir_seg3_wanted != LedCtrl.IRstate.segment.seg3) {
-        ret = _ir_write(LED_AD_SEG3, ir_seg3_wanted);
-        if(ret!=E_OK){
-           _error_log_write(LED_ID_IR, LED_AD_SEG3, ir_seg3_wanted); 
-           return ret;
-        }
-    }
-
-    if(ir_seg4_wanted != LedCtrl.IRstate.segment.seg4) {
-        ret = _ir_write(LED_AD_SEG4, ir_seg4_wanted);
-        if(ret!=E_OK){
-            _error_log_write(LED_ID_IR, LED_AD_SEG4, ir_seg4_wanted);
-            return ret;
-        }
-    }
-
-    if(ir_brightness_wanted != LedCtrl.IRstate.brightness) {
-        ret = _ir_write(LED_AD_PWM, ir_brightness_wanted);
-        if(ret!=E_OK){
-            _error_log_write(LED_ID_IR, LED_AD_PWM, ir_brightness_wanted);
-            return ret;
-        }
-    }*/
-
-    return E_OK; 
 }
 
 unsigned int _vis_lightcode_read(void)

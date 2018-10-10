@@ -90,7 +90,6 @@ int LedIllum::Update_Vis_Global(int vis_global_wanted)
     return E_OK;
 }
 
-//int LedIllum::Update_Vis_Segment(SegState_t vis_seg_wanted)
 int LedIllum::Update_Vis_Segment(int seg1_w, int seg2_w, int seg3_w, int seg4_w)
 {
     SegState_t vis_seg_wanted = {seg1_w, seg2_w, seg3_w, seg4_w}; 
@@ -151,7 +150,6 @@ int LedIllum::Update_Ir_Global(int ir_global_wanted)
 }
 
 int LedIllum::Update_Ir_Segment(int seg1_w, int seg2_w, int seg3_w, int seg4_w)
-//int LedIllum::Update_Ir_Segment(SegState_t ir_seg_wanted)
 {
     SegState_t ir_seg_wanted = {seg1_w, seg2_w, seg3_w, seg4_w}; 
     /* 0. compare the state */
@@ -192,138 +190,121 @@ int LedIllum::Update_Ir_Brightness(int ir_brightness_wanted)
 /******************** Independent operation *********************************/
 int LedIllum::Vis_Enable_Write(int state)
 {
-/*    int ret=-1;
-    if(state==this->VISstate.global){         // same state, nothing to do
-        return E_OK;
-    }
-
-    if(state==TURN_ON){
-    }
-    ret = pin_vis_global_wr(state);
-    if(ret==E_OK){
-        this->VISstate.global = state; 
-    }
-    return ret;*/
     return Update_Vis_Global(state);
 }
 
 int LedIllum::Ir_Enable_Write(int state)
 {
-/*    int ret=-1;
-    ret = pin_ir_global_wr(state);
-    if(ret==E_OK){
-        this->IRstate.global = state; 
-    }
-    return ret;
-    */
     return Update_Ir_Global(state);
 }
+/*
+ *  check if segments wanted state are OK 
+ */
+int chk_safety(SegState_t segment)
+{
+    // check parameter validation 
+    if(    ( (segment.seg1!=0)&&(segment.seg1!=1) )
+        || ( (segment.seg2!=0)&&(segment.seg2!=1) )
+        || ( (segment.seg3!=0)&&(segment.seg3!=1) ) 
+        || ( (segment.seg4!=0)&&(segment.seg4!=1) )
+      ) { return E_NOEXIST; }
+
+    // check safety
+    if( (segment.seg1==0) && (segment.seg2==0) && (segment.seg3==0) && (segment.seg4==0) ) {
+        return E_SAFETY;
+    }
+
+    return E_OK;
+} 
 
 /********************** SEGMENT relavant ************************************/
 int LedIllum::Vis_Segment_Write(int segaddr, int value)
 {
     int ret = -1;
+    SegState_t seg_want;                             // declear a temp state struct
+    seg_want.seg1 = this->VISstate.segment.seg1;     // sync with current state
+    seg_want.seg2 = this->VISstate.segment.seg2;
+    seg_want.seg3 = this->VISstate.segment.seg3;  
+    seg_want.seg4 = this->VISstate.segment.seg4;
+
+    /* 1. build new command */
     switch(segaddr){
         case LED_AD_SEG1:
-            ret = pin_vis_seg1_wr(value); 
-            if(ret==E_OK){
-                this->VISstate.segment.seg1 = value;
-            }
+            seg_want.seg1 = value;
             break;
 
          case LED_AD_SEG2:
-            ret = pin_vis_seg2_wr(value); 
-            if(ret==E_OK){
-                this->VISstate.segment.seg2 = value;
-            }
+            seg_want.seg2 = value;
             break;
 
          case LED_AD_SEG3:
-            ret = pin_vis_seg3_wr(value); 
-            if(ret==E_OK){
-                this->VISstate.segment.seg3 = value;
-            }
+            seg_want.seg3 = value;
             break;
         
          case LED_AD_SEG4:
-            ret = pin_vis_seg4_wr(value); 
-            if(ret==E_OK){
-                this->VISstate.segment.seg4 = value;
-            }
+            seg_want.seg4 = value;
             break;
 
          default:
             ret = E_NOEXIST;
-            break;
+            return ret;
     }
 
-    return ret; 
+    /* 2. check safety */
+    ret = chk_safety(seg_want);
+    if(ret!=E_OK){  return ret;  } 
+
+    /* 3. do setting */
+    return Update_Vis_Segment(seg_want.seg1, seg_want.seg2, seg_want.seg3, seg_want.seg4);
 }
 
 int LedIllum::Ir_Segment_Write(int segaddr, int value)
 {
     int ret = -1;
+    SegState_t seg_want;                            // declear a temp state struct
+    seg_want.seg1 = this->IRstate.segment.seg1;     // sync with current state
+    seg_want.seg2 = this->IRstate.segment.seg2;
+    seg_want.seg3 = this->IRstate.segment.seg3;
+    seg_want.seg4 = this->IRstate.segment.seg4;
+    /* 1. build command */
     switch(segaddr){
         case LED_AD_SEG1:
-            ret = pin_ir_seg1_wr(value);
-            if(ret==E_OK){
-                this->IRstate.segment.seg1 = value;
-            }
+            seg_want.seg1 = value;
             break;
 
         case LED_AD_SEG2:
-            ret = pin_ir_seg2_wr(value);
-            if(ret==E_OK){
-                this->IRstate.segment.seg2 = value;
-            }
+            seg_want.seg2 = value;
             break;
 
         case LED_AD_SEG3:
-            ret = pin_ir_seg3_wr(value);
-            if(ret==E_OK){
-                this->IRstate.segment.seg3 = value;
-            }
+            seg_want.seg3 = value;
             break;
 
         case LED_AD_SEG4:
-            ret = pin_ir_seg4_wr(value);
-            if(ret==E_OK){
-                this->IRstate.segment.seg4 = value;
-            }
+            seg_want.seg4 = value;
             break;
 
         default:
             ret = E_NOEXIST;
-            break;
+            return ret;
     }
 
-    return ret;
+    /* 2. check safety */ 
+    ret = chk_safety(seg_want);
+    if(ret!=E_OK){  return ret;  }
+
+    /* 3. do setting */
+    return Update_Ir_Segment(seg_want.seg1, seg_want.seg2, seg_want.seg3, seg_want.seg4);
 }
 
 int LedIllum::Vis_Pwm_Write(int duty)
 {
-/*    int ret=-1;
-    int src_duty = this->VISstate.brightness;
-    ret = pin_vis_pwm_ramp(src_duty, duty);
-    if(ret==E_OK){
-        this->VISstate.brightness = duty; 
-    }
-    return ret;
-    */
     return Update_Vis_Brightness(duty);
 }
 
 
 int LedIllum::Ir_Pwm_Write(int duty)
 {
-/*    int ret = -1;
-    int src_duty = this->IRstate.brightness;
-    ret = pin_ir_pwm_ramp(src_duty, duty);
-    if(ret==E_OK){
-        this->IRstate.brightness = duty;
-    }
-    return ret;
-    */
     return Update_Ir_Brightness(duty);
 }
 
