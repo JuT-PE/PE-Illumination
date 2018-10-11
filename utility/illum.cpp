@@ -158,7 +158,7 @@ int LedIllum::SetIrState(LedState_t ir_wanted)
         pin_ir_seg4_wr(ir_wanted.segment.seg4);
         pin_ir_pwm_ramp(0, ir_wanted.brightness);
     }else{
-        pin_ir_pwm_ramp(this->IRstate.brightness, IRstate.brightness);
+        pin_ir_pwm_ramp(this->IRstate.brightness, ir_wanted.brightness);
     }
 
     // report the state
