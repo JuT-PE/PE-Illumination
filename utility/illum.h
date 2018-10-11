@@ -73,8 +73,8 @@ class LedIllum {
         // functions
         LedState_t GetVisState(void);
         LedState_t GetIrState(void); 
-        int SetVisState(LedState_t vis_wanted);
-        int SetIrState(LedState_t ir_wanted);
+        int Update_Vis_State(int global, int seg1, int seg2, int seg3, int seg4, int bright);
+        int Update_Ir_State(int global, int seg1, int seg2, int seg3, int seg4, int bright);
 
         // single operation interface
         int Vis_Enable_Write(int state);
@@ -91,18 +91,19 @@ class LedIllum {
         int Ir_Pwm_Read(int segaddr, int* value); 
         int Ir_Segment_Read(int segaddr, int* value);
 
-        // total operation interface
+    private:
+        int vis_init(void);
+        int ir_init(void);
+        // light code usage
+        int SetVisState(LedState_t vis_wanted);
+        int SetIrState(LedState_t ir_wanted);
+        // single operation 
         int Update_Vis_Global(int vis_global_wanted);
         int Update_Vis_Segment(int seg1_w, int seg2_w, int seg3_w, int seg4_w);
         int Update_Vis_Brightness(int vis_brightness_wanted);
         int Update_Ir_Global(int ir_global_wanted);
         int Update_Ir_Segment(int seg1_w, int seg2_w, int seg3_w, int seg4_w);
         int Update_Ir_Brightness(int ir_brightness_wanted);
-
-    private:
-        int vis_init(void);
-        int ir_init(void);
-
 };
 
 /* function prototypes */ 

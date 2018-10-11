@@ -1,18 +1,16 @@
 #include <Arduino.h>
 #include "utility/illum.h" 
-#include "cmd_uart.h"
 #include "utility/statuscode.h"
 
 /* static functions decleration */ 
 static void _pwm_config(int mode);
 static int _ramp_pwm(int id, int src, int desti);
 static void _setPWM(int id, int duty);
+static int chk_safety(SegState_t segment);
+static bool IsChangeNeeded_Segment(SegState_t src, SegState_t desti);
 
 LedIllum::LedIllum()
 {
-//    pin_init();
-//    vis_init();
-//    ir_init();
 }
 
 int LedIllum::Init(void)
@@ -72,18 +70,98 @@ LedState_t LedIllum::GetIrState(void)
     return this->IRstate; 
 }
 
+bool IsChangeNeeded_Segment(SegState_t src, SegState_t desti)
+{
+    if(    (desti.seg1==src.seg1)
+        && (desti.seg2==src.seg2) 
+        && (desti.seg3==src.seg3)
+        && (desti.seg4==src.seg4)
+      ){ return false; }          // nothing needs to be changed
+    else{
+        return true;              // a change is needed
+    }
+}
+
+int LedIllum::Update_Vis_State(int global, int seg1, int seg2, int seg3, int seg4, int bright)
+{
+    LedState_t vis_state_want;
+    vis_state_want.global             = global;
+    vis_state_want.segment.seg1       = seg1;
+    vis_state_want.segment.seg2       = seg2;
+    vis_state_want.segment.seg3       = seg3;
+    vis_state_want.segment.seg4       = seg4;
+    vis_state_want.brightness = bright;
+    return SetVisState(vis_state_want);
+}
+
+int LedIllum::Update_Ir_State(int global, int seg1, int seg2, int seg3, int seg4, int bright)
+{
+    LedState_t ir_state_want;
+    ir_state_want.global             = global;
+    ir_state_want.segment.seg1       = seg1;
+    ir_state_want.segment.seg2       = seg2;
+    ir_state_want.segment.seg3       = seg3;
+    ir_state_want.segment.seg4       = seg4;
+    ir_state_want.brightness = bright;
+    return SetIrState(ir_state_want);
+}
+
+
 int LedIllum::SetVisState(LedState_t vis_wanted)
 {
-//    Update_Vis_Global(vis_wanted.global);
-//    Update_Vis_Segment(vis_wanted.segment);
-//    Update_Vis_Brightness(vis_wanted.brightness);
+    bool needchange_global = (vis_wanted.global     != this->VISstate.global);   // Need global change?
+    bool needchange_seg    = IsChangeNeeded_Segment(this->VISstate.segment, vis_wanted.segment);
+    bool needchange_bright = (vis_wanted.brightness != this->VISstate.brightness);
     
+    // check if nothing need to be done 
+    if( (!needchange_global) && (!needchange_seg) && (!needchange_bright) ){
+        return E_OK;            
+    }  
+
+    // either global or segments changed 
+    if( needchange_global || needchange_seg ){
+        pin_vis_pwm_ramp(this->VISstate.brightness, 0); // ramp to 0
+        pin_vis_global_wr(vis_wanted.global);           // global change 
+        pin_vis_seg1_wr(vis_wanted.segment.seg1);           // segments change
+        pin_vis_seg2_wr(vis_wanted.segment.seg2);
+        pin_vis_seg3_wr(vis_wanted.segment.seg3);
+        pin_vis_seg4_wr(vis_wanted.segment.seg4);
+        pin_vis_pwm_ramp(0, vis_wanted.brightness);      // ramp back to wanted brightness
+    }else{                                               // brightness the only one needs to be changed
+        pin_vis_pwm_ramp(this->VISstate.brightness, vis_wanted.brightness);
+    }
+
+    // report the state
     this->VISstate = vis_wanted;
     return E_OK;
 }
 
+
 int LedIllum::SetIrState(LedState_t ir_wanted)
 {
+    bool needchange_global = (ir_wanted.global     != this->IRstate.global);
+    bool needchange_seg    = IsChangeNeeded_Segment(this->IRstate.segment, ir_wanted.segment);
+    bool needchange_bright = (ir_wanted.brightness != this->IRstate.brightness); 
+
+    // check if nothing needs to be done
+    if( (!needchange_global) && (!needchange_seg) && (!needchange_bright) ){
+        return E_OK;
+    }
+
+    // either global or segments changed
+    if( needchange_global || needchange_seg ){
+        pin_ir_pwm_ramp(this->IRstate.brightness, 0);
+        pin_ir_global_wr(ir_wanted.global);
+        pin_ir_seg1_wr(ir_wanted.segment.seg1);
+        pin_ir_seg2_wr(ir_wanted.segment.seg2);
+        pin_ir_seg3_wr(ir_wanted.segment.seg3);
+        pin_ir_seg4_wr(ir_wanted.segment.seg4);
+        pin_ir_pwm_ramp(0, ir_wanted.brightness);
+    }else{
+        pin_ir_pwm_ramp(this->IRstate.brightness, IRstate.brightness);
+    }
+
+    // report the state
     this->IRstate = ir_wanted;
     return E_OK;
 }
@@ -101,6 +179,9 @@ int LedIllum::Update_Vis_Global(int vis_global_wanted)
         pin_vis_global_wr(TURN_OFF);                     // turn off
     }
     else{
+        if(chk_safety(this->VISstate.segment)!=E_OK){    // OFF->ON, check segments safety 
+            return E_SAFETY;
+        }
         pin_vis_pwm_ramp(this->VISstate.brightness, 0);  // it was still off, we ramp to 0 for safety turn on 
         pin_vis_global_wr(TURN_ON);                      // safely turn on
         pin_vis_pwm_ramp(0, this->VISstate.brightness);  // ramp back 
@@ -119,7 +200,7 @@ int LedIllum::Update_Vis_Segment(int seg1_w, int seg2_w, int seg3_w, int seg4_w)
        && (vis_seg_wanted.seg2 == current.seg2) 
        && (vis_seg_wanted.seg3 == current.seg3)
        && (vis_seg_wanted.seg4 == current.seg4)
-     ){  return E_OK; } 
+     ){  return E_OK; }                                    // nothing needs to be done
     
     // 1. pwm ramp down
     pin_vis_pwm_ramp(this->VISstate.brightness, 0);
@@ -159,6 +240,9 @@ int LedIllum::Update_Ir_Global(int ir_global_wanted)
         pin_ir_pwm_ramp(this->IRstate.brightness, 0);
         pin_ir_global_wr(TURN_OFF);
     }else{
+        if(chk_safety(this->IRstate.segment)!=E_OK){    // OFF->ON, check segments safety 
+            return E_SAFETY;
+        }
         pin_ir_pwm_ramp(this->IRstate.brightness, 0);
         pin_ir_global_wr(TURN_ON);
         pin_ir_pwm_ramp(0, this->IRstate.brightness);
@@ -271,8 +355,10 @@ int LedIllum::Vis_Segment_Write(int segaddr, int value)
     }
 
     /* 2. check safety */
-    ret = chk_safety(seg_want);
-    if(ret!=E_OK){  return ret;  } 
+    if(this->VISstate.global==ENABLE){
+        ret = chk_safety(seg_want);
+        if(ret!=E_OK){  return ret;  } 
+    }
 
     /* 3. do setting */
     return Update_Vis_Segment(seg_want.seg1, seg_want.seg2, seg_want.seg3, seg_want.seg4);
@@ -310,8 +396,10 @@ int LedIllum::Ir_Segment_Write(int segaddr, int value)
     }
 
     /* 2. check safety */ 
-    ret = chk_safety(seg_want);
-    if(ret!=E_OK){  return ret;  }
+    if(this->IRstate.global==ENABLE){
+        ret = chk_safety(seg_want);
+        if(ret!=E_OK){  return ret;  }
+    }
 
     /* 3. do setting */
     return Update_Ir_Segment(seg_want.seg1, seg_want.seg2, seg_want.seg3, seg_want.seg4);
@@ -411,13 +499,12 @@ void pin_init(void)
     _pwm_config(PWM187k);
 }
 
-/* visible enables */
+// visible enables 
 int pin_vis_global_wr(int state)
 {
     int pinstate;
     (state==ENABLE) ? (pinstate=LOW) : (pinstate=HIGH);   // pin converted, LOW means turning on, HIGH means turning off
     digitalWrite(PinVIS_EN, pinstate); 
-//    cmd_printf("Vis global enable: %d\n", state);
     return E_OK;
 } 
 
@@ -426,7 +513,6 @@ int pin_vis_seg1_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinVIS_SEG1, pinstate);
-//    cmd_printf("Vis seg1 enable:%d\n", state); 
     return E_OK;
 }
 
@@ -435,7 +521,6 @@ int pin_vis_seg2_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinVIS_SEG2, pinstate);
-//    cmd_printf("Vis seg2 enable:%d\n", state);
     return E_OK;
 }
 
@@ -444,7 +529,6 @@ int pin_vis_seg3_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinVIS_SEG3, pinstate);
-//    cmd_printf("Vis seg3 enable:%d\n", state);
     return E_OK;
 }
 
@@ -453,17 +537,15 @@ int pin_vis_seg4_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinVIS_SEG4, pinstate);
-//    cmd_printf("Vis seg4 enable:%d\n", state);
     return E_OK;
 }
 
-/* infrared enables */
+// infrared enables 
 int pin_ir_global_wr(int state)
 {
     int pinstate;
     (state==ENABLE) ? (pinstate=LOW) : (pinstate=HIGH);   // pin converted, LOW means turning on, HIGH means turning off  
     digitalWrite(PinIR_EN, pinstate);
-//    cmd_printf("Ir global enable:%d\n", state);
     return E_OK;
 }
 
@@ -472,7 +554,6 @@ int pin_ir_seg1_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinIR_SEG1, pinstate);
-//    cmd_printf("Ir seg1 enable:%d\n", state);
     return E_OK;
 }
 
@@ -481,7 +562,6 @@ int pin_ir_seg2_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinIR_SEG2, pinstate);
-//    cmd_printf("Ir seg2 enable:%d\n", state);
     return E_OK; 
 } 
 
@@ -490,7 +570,6 @@ int pin_ir_seg3_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinIR_SEG3, pinstate);
-//    cmd_printf("Ir seg3 enable:%d\n", state);
     return E_OK;
 }
 
@@ -499,22 +578,20 @@ int pin_ir_seg4_wr(int state)
     int pinstate;
     (state==ENABLE) ? (pinstate=HIGH) : (pinstate=LOW);
     digitalWrite(PinIR_SEG4, pinstate);
-//    cmd_printf("Ir seg4 enable:%d\n", state);
     return E_OK;
 }
 
-/* visible and infrared pwm */
+// visible and infrared pwm 
 int pin_vis_pwm_ramp(int src, int desti)
 {
-//    cmd_printf("Vis pwm %d->%d\n", src, desti);
     return _ramp_pwm(LED_ID_VIS, src, desti);
 }
 
 int pin_ir_pwm_ramp(int src, int desti)
 {
-//    cmd_printf("Ir pwm %d->%d\n", src, desti);
     return _ramp_pwm(LED_ID_IR, src, desti);
 }
+
 
 static void _pwm_config(int mode){
     // Configure Visible PWM port pin PC6/OC4A

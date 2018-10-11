@@ -62,7 +62,7 @@ int cmd_getversion(int argc, char *argv[]){
         return RUN_FAIL;
     }
 
-    cmd_printf("led illumination board V2.1.3\n");
+    cmd_printf("led illumination board V2.1.4\n");
     return RUN_SUCCESS;
 }
 
@@ -100,41 +100,17 @@ int _lightcode_write(unsigned int viscode, unsigned int ircode){
     if(ir_brightness_wanted  > 100) { return E_RANGE; }
 
     /* do operation */
-    ret = LedCtrl.Update_Vis_Global(vis_global_wanted);
+    ret = LedCtrl.Update_Vis_State(vis_global_wanted, vis_seg1_wanted, vis_seg2_wanted, vis_seg3_wanted, vis_seg4_wanted, vis_brightness_wanted);
     if(ret!=E_OK){
-        cmd_printf("Error %d: vis en fault\n", ret);  
+        cmd_printf("Error %d: update vis state\n", ret);
         return ret;
     }
 
-    ret = LedCtrl.Update_Vis_Segment(vis_seg1_wanted, vis_seg2_wanted, vis_seg3_wanted, vis_seg4_wanted);
+    ret = LedCtrl.Update_Ir_State(ir_global_wanted, ir_seg1_wanted, ir_seg2_wanted, ir_seg3_wanted, ir_seg4_wanted, ir_brightness_wanted);
     if(ret!=E_OK){
-        cmd_printf("Error %d: vis seg fault %d%d%d%d\n", ret, vis_seg4_wanted, vis_seg3_wanted, vis_seg2_wanted, vis_seg1_wanted);
+        cmd_printf("Error %d: update ir state\n", ret);
         return ret;
-    }
-
-    ret = LedCtrl.Update_Vis_Brightness(vis_brightness_wanted);
-    if(ret!=E_OK){
-        cmd_printf("Error %d: vis pwm fault %d\n", ret, vis_brightness_wanted); 
-        return ret;
-    }
-
-    ret = LedCtrl.Update_Ir_Global(ir_global_wanted);
-    if(ret!=E_OK){
-        cmd_printf("Error %d: ir en fault\n", ret);
-        return ret;
-    }
-
-    ret = LedCtrl.Update_Ir_Segment(ir_seg1_wanted, ir_seg2_wanted, ir_seg3_wanted, ir_seg4_wanted);
-    if(ret!=E_OK){
-        cmd_printf("Error %d: ir seg fault %d%d%d%d\n", ret, ir_seg4_wanted, ir_seg3_wanted, ir_seg2_wanted, ir_seg1_wanted);
-        return ret;
-    }
-
-    ret = LedCtrl.Update_Ir_Brightness(ir_brightness_wanted);
-    if(ret!=E_OK){
-        cmd_printf("Error %d: ir pwm fault %d\n", ret, ir_brightness_wanted); 
-        return ret;
-    }
+    } 
 
     return E_OK;
 }
