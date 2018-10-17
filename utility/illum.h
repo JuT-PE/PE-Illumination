@@ -67,6 +67,8 @@ class LedIllum {
         LedIllum();     // constructor
         LedState_t VISstate;
         LedState_t IRstate;
+        int VISbrightness_soll;
+        int IRbrightness_soll;
 
         int Init(void);
 

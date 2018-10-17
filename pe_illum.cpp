@@ -31,10 +31,12 @@ LedIllum LedCtrl;
 const cmd_tbl_t cmd_tbl[] =
 {
     /* cmd, function, help */
-    { "_getversion"    , cmd_getversion      , "print the version info." },
-    { "_ledwr"         , cmd_ledwrite        , "write LED"},
-    { "_ledrd"         , cmd_ledread         , "read LED"},
-    { "_lightcode"     , cmd_lightcode       , "write or read using light code"},
+    { "getversion"    , cmd_getversion      , "print the version info." },
+    { "ledwr"         , cmd_ledwrite        , "write LED"},
+    { "ledrd"         , cmd_ledread         , "read LED"},
+    { "lightcode"     , cmd_lightcode       , "write or read using light code"},
+    { "viscode"        , cmd_viscode         , "ctrl vis-leds using light code"},
+    { "ircode"         , cmd_ircode          , "ctrl ir-leds using light code" },
     { NULL }
 };
 
@@ -62,9 +64,52 @@ int cmd_getversion(int argc, char *argv[]){
         return RUN_FAIL;
     }
 
-    cmd_printf("led illumination board V2.1.4\n");
+    cmd_printf("led illumination board VT.1.4\n");
     return RUN_SUCCESS;
 }
+
+int _viscode_write(unsigned int vis_brightness_wanted, unsigned int vis_seg4_wanted, unsigned int vis_seg3_wanted, unsigned int vis_seg2_wanted, unsigned int vis_seg1_wanted, unsigned int vis_en_wanted)
+{
+    /* check range */
+    if( vis_global_wanted==1 ){                           // want to switch on
+        if( ((viscode>>1)&0xF) == 0){                     // check segment safety
+            return E_SAFETY;
+        }
+    }
+    if(vis_brightness_wanted > 100) { return E_RANGE; }   // check brightness percentage value
+
+
+    /* do operation */
+    ret = LedCtrl.Update_Vis_State(vis_global_wanted, vis_seg1_wanted, vis_seg2_wanted, vis_seg3_wanted, vis_seg4_wanted, vis_brightness_wanted);
+    if(ret!=E_OK){
+        cmd_printf("Error %d: update vis state\n", ret);
+        return ret;
+    }
+
+    return E_OK;
+}
+
+int _ircode_write(unsigned int ir_brightness_wanted, unsigned int ir_seg4_wanted, unsigned int ir_seg3_wanted, unsigned int ir_seg2_wanted, unsigned int ir_seg1_wanted, unsigned int ir_en_wanted)
+{
+    /* check range */
+    if( ir_global_wanted==1 ){                           // want to switch on
+        if( ((ircode>>1)&0xF) == 0){                     // check segment safety
+            return E_SAFETY;
+        }
+    }
+    if(ir_brightness_wanted > 100) { return E_RANGE; }   // check brightness percentage value
+
+
+    /* do operation */
+    ret = LedCtrl.Update_Ir_State(ir_global_wanted, ir_seg1_wanted, ir_seg2_wanted, ir_seg3_wanted, ir_seg4_wanted, ir_brightness_wanted);
+    if(ret!=E_OK){
+        cmd_printf("Error %d: update ir state\n", ret);
+        return ret;
+    }
+
+    return E_OK;
+}
+
 
 int _lightcode_write(unsigned int viscode, unsigned int ircode){
     int ret;
@@ -117,27 +162,27 @@ int _lightcode_write(unsigned int viscode, unsigned int ircode){
 
 unsigned int _vis_lightcode_read(void)
 {
-    unsigned int vis_en_code   = (unsigned int) ((LedCtrl.VISstate.global       &0x1)<<0 );
-    unsigned int vis_seg1_code = (unsigned int) ((LedCtrl.VISstate.segment.seg1 &0x1)<<1 ); 
-    unsigned int vis_seg2_code = (unsigned int) ((LedCtrl.VISstate.segment.seg2 &0x1)<<2 );
-    unsigned int vis_seg3_code = (unsigned int) ((LedCtrl.VISstate.segment.seg3 &0x1)<<3 );
-    unsigned int vis_seg4_code = (unsigned int) ((LedCtrl.VISstate.segment.seg4 &0x1)<<4 );
-    unsigned int vis_pwm_code  = (unsigned int) ((LedCtrl.VISstate.brightness   &0xFF)<<5 );
+    unsigned int vis_en_code   = (unsigned int) ((LedCtrl.GetVisState.global       &0x1)<<0 );
+    unsigned int vis_seg1_code = (unsigned int) ((LedCtrl.GetVisState.segment.seg1 &0x1)<<1 ); 
+    unsigned int vis_seg2_code = (unsigned int) ((LedCtrl.GetVisState.segment.seg2 &0x1)<<2 );
+    unsigned int vis_seg3_code = (unsigned int) ((LedCtrl.GetVisState.segment.seg3 &0x1)<<3 );
+    unsigned int vis_seg4_code = (unsigned int) ((LedCtrl.GetVisState.segment.seg4 &0x1)<<4 );
+    unsigned int vis_pwm_code  = (unsigned int) ((LedCtrl.GetVisState.brightness   &0xFF)<<5 );
 
-//    cmd_printf("VIS: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.VISstate.brightness, LedCtrl.VISstate.segment.seg4, LedCtrl.VISstate.segment.seg3, LedCtrl.VISstate.segment.seg2, LedCtrl.VISstate.segment.seg1, LedCtrl.VISstate.global);
+    cmd_printf("VIS: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.GetVisState.brightness, LedCtrl.GetVisState.segment.seg4, LedCtrl.GetVisState.segment.seg3, LedCtrl.GetVisState.segment.seg2, LedCtrl.GetVisState.segment.seg1, LedCtrl.GetVisState.global);
     return (vis_en_code | vis_seg1_code | vis_seg2_code | vis_seg3_code | vis_seg4_code | vis_pwm_code);  
 }
 
 unsigned int _ir_lightcode_read(void)
 {
-    unsigned int ir_en_code   = (unsigned int) ((LedCtrl.IRstate.global       &0x1)<<0 );
-    unsigned int ir_seg1_code = (unsigned int) ((LedCtrl.IRstate.segment.seg1 &0x1)<<1 ); 
-    unsigned int ir_seg2_code = (unsigned int) ((LedCtrl.IRstate.segment.seg2 &0x1)<<2 );
-    unsigned int ir_seg3_code = (unsigned int) ((LedCtrl.IRstate.segment.seg3 &0x1)<<3 );
-    unsigned int ir_seg4_code = (unsigned int) ((LedCtrl.IRstate.segment.seg4 &0x1)<<4 );
-    unsigned int ir_pwm_code  = (unsigned int) ((LedCtrl.IRstate.brightness   &0xFF)<<5 );
+    unsigned int ir_en_code   = (unsigned int) ((LedCtrl.GetIrState.global       &0x1)<<0 );
+    unsigned int ir_seg1_code = (unsigned int) ((LedCtrl.GetIrState.segment.seg1 &0x1)<<1 ); 
+    unsigned int ir_seg2_code = (unsigned int) ((LedCtrl.GetIrState.segment.seg2 &0x1)<<2 );
+    unsigned int ir_seg3_code = (unsigned int) ((LedCtrl.GetIrState.segment.seg3 &0x1)<<3 );
+    unsigned int ir_seg4_code = (unsigned int) ((LedCtrl.GetIrState.segment.seg4 &0x1)<<4 );
+    unsigned int ir_pwm_code  = (unsigned int) ((LedCtrl.GetIrState.brightness   &0xFF)<<5 );
 
-//    cmd_printf("IR: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.IRstate.brightness, LedCtrl.IRstate.segment.seg4, LedCtrl.IRstate.segment.seg3, LedCtrl.IRstate.segment.seg2, LedCtrl.IRstate.segment.seg1, LedCtrl.IRstate.global);
+    cmd_printf("IR: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.GetIrState.brightness, LedCtrl.GetIrState.segment.seg4, LedCtrl.GetIrState.segment.seg3, LedCtrl.GetIrState.segment.seg2, LedCtrl.GetIrState.segment.seg1, LedCtrl.GetIrState.global);
     return (ir_en_code | ir_seg1_code | ir_seg2_code | ir_seg3_code | ir_seg4_code | ir_pwm_code);  
 }
 
@@ -176,6 +221,67 @@ int cmd_lightcode(int argc, char *argv[])
     if(ret!=E_OK) { return RUN_FAIL;    }
     else          { return RUN_SUCCESS; }
 } 
+
+int cmd_viscode(int argc, char *argv[])
+{
+    int ret;
+    unsigned int vis_pwm, vis_seg4, vis_seg3, vis_seg2, vis_seg1, vis_en;
+
+    switch(argc){
+        case 7:
+            vis_pwm  = cmdStr2ul(argv[1], 0);
+            vis_seg4 = cmdStr2ul(argv[2], 0);
+            vis_seg3 = cmdStr2ul(argv[3], 0);
+            vis_seg2 = cmdStr2ul(argv[4], 0);
+            vis_seg1 = cmdStr2ul(argv[5], 0);
+            vis_en   = cmdStr2ul(argv[6], 0);
+            ret      = _viscode_write(vis_pwm, vis_seg4, vis_seg3, vis_seg2, vis_seg1, vis_en);
+            if(ret!=E_OK){
+                cmd_printf("Fail %d\n");
+            }
+            else{
+                cmd_printf("Success: ircode=%d %d %d %d %d %d\n", vis_pwm, vis_seg4, vis_seg3, vis_seg2, vis_seg1, vis_en);
+            }
+            break;
+        default:
+            cmd_printf("Usage: viscode \n");
+            ret = E_UNVALID;
+            break;
+    }
+    if(ret!=E_OK) { return RUN_FAIL;    }  
+    else          { return RUN_SUCCESS; }
+}
+
+int cmd_ircode(int argc, char *argv[])
+{
+    int ret;
+    unsigned int ir_pwm, ir_seg4, ir_seg3, ir_seg2, ir_seg1, ir_en;
+
+    switch(argc){
+        case 7:
+            ir_pwm  = cmdStr2ul(argv[1], 0);
+            ir_seg4 = cmdStr2ul(argv[2], 0);
+            ir_seg3 = cmdStr2ul(argv[3], 0);
+            ir_seg2 = cmdStr2ul(argv[4], 0);
+            ir_seg1 = cmdStr2ul(argv[5], 0);
+            ir_en   = cmdStr2ul(argv[6], 0);
+            ret     = _ircode_write(ir_pwm, ir_seg4, ir_seg3, ir_seg2, ir_seg1, ir_en);
+            if(ret!=E_OK){
+                cmd_printf("Fail %d\n");
+            }
+            else{
+                cmd_printf("Success: ircode=%d %d %d %d %d %d\n", ir_pwm, ir_seg4, ir_seg3, ir_seg2, ir_seg1, ir_en);
+            }
+            break;
+        default:
+            cmd_printf("Usage: ircode \n");
+            ret = E_UNVALID;
+            break;
+    }
+    if(ret!=E_OK) { return RUN_FAIL;    }  
+    else          { return RUN_SUCCESS; }
+}
+
 
 /*
  * Command interface for writing operation

@@ -33,10 +33,11 @@ int LedIllum::vis_init(void)
     pin_vis_seg2_wr(ENABLE);
     pin_vis_seg3_wr(ENABLE);
     pin_vis_seg4_wr(ENABLE);
-    pin_vis_pwm_ramp(0, 100);  
-    this->VISstate.global = 0;
-    this->VISstate.segment = {1, 1, 1, 1}; 
-    this->VISstate.brightness = 100;
+    pin_vis_pwm_ramp(0, 0);  
+    this->VISstate.global     = 0;
+    this->VISstate.segment    = {1, 1, 1, 1}; 
+    this->VISstate.brightness = 0;
+    this->VISbrightness_soll  = 0;
     return E_OK;
 }
 
@@ -53,21 +54,32 @@ int LedIllum::ir_init(void)
     pin_ir_seg2_wr(ENABLE);
     pin_ir_seg3_wr(ENABLE);
     pin_ir_seg4_wr(ENABLE);
-    pin_ir_pwm_ramp(0, 100);
-    this->IRstate.global = 0;
-    this->IRstate.segment = {1, 1, 1, 1};
-    this->IRstate.brightness = 100;
+    pin_ir_pwm_ramp(0, 0);
+    this->IRstate.global     = 0;
+    this->IRstate.segment    = {1, 1, 1, 1};
+    this->IRstate.brightness = 0;
+    this->IRbrightness_soll  = 0;
     return E_OK;
 }
 
 LedState_t LedIllum::GetVisState(void)
 {
-    return this->VISstate;
+    LedState_t VISstate_report;
+    VISstate_report = this->VISstate;
+    if(this->VISstate.global==0){
+        VISstate_report.brightness = this->VISbrightness_soll; 
+    }
+    return VISstate_report;
 }
 
 LedState_t LedIllum::GetIrState(void)
 {
-    return this->IRstate; 
+    LedState_t IRstate_report;
+    IRstate_report = this->IRstate; 
+    if(this->IRstate.global==0){
+        IRstate_report.brightness = this->IRbrightness_soll;
+    }
+    return IRstate_report; 
 }
 
 bool IsChangeNeeded_Segment(SegState_t src, SegState_t desti)
@@ -118,6 +130,33 @@ int LedIllum::SetVisState(LedState_t vis_wanted)
         return E_OK;            
     }  
 
+    // global enable changed, special treatment if global disable is wanted.
+    if(vis_wanted.global==0){  // otherwise if switching on is wanted, just follow the lightcode. 
+        switch(this->VISstate.global){
+            case 0: //OFF->OFF, real pwm stays at 0, same as before
+                pin_vis_seg1_wr(vis_wanted.segment.seg1);
+                pin_vis_seg2_wr(vis_wanted.segment.seg2);
+                pin_vis_seg3_wr(vis_wanted.segment.seg3);
+                pin_vis_seg4_wr(vis_wanted.segment.seg4);
+                break;
+            case 1: // ON->OFF, pwm ramp to 0, and stay 0
+                pin_vis_pwm_ramp(this->VISstate.brightness, 0);
+                pin_vis_seg1_wr(vis_wanted.segment.seg1);
+                pin_vis_seg2_wr(vis_wanted.segment.seg2);
+                pin_vis_seg3_wr(vis_wanted.segment.seg3);
+                pin_vis_seg4_wr(vis_wanted.segment.seg4);
+                break;
+            default:
+                return E_NOEXIST; 
+        } 
+        // update the state, at this situation, real brightness is 0, but soll
+        // brightness may differ from real brightness
+        this->VISstate            = vis_wanted;
+        this->VISstate.brightness = 0;          // But! real brightness is 0   
+        this->VISbrightness_soll  = vis_wanted.brightness; // soll brightness synchronize with extern
+        return E_OK;
+    }
+
     // either global or segments changed 
     if( needchange_global || needchange_seg ){
         pin_vis_pwm_ramp(this->VISstate.brightness, 0); // ramp to 0
@@ -147,6 +186,33 @@ int LedIllum::SetIrState(LedState_t ir_wanted)
     if( (!needchange_global) && (!needchange_seg) && (!needchange_bright) ){
         return E_OK;
     }
+    
+    // global enable changed, special treatment if global disable is wanted.
+    if(ir_wanted.global==0){  // otherwise if switching on is wanted, just follow the lightcode. 
+        switch(this->IRstate.global){
+            case 0: //OFF->OFF, real pwm stays at 0, same as before
+                pin_ir_seg1_wr(ir_wanted.segment.seg1);
+                pin_ir_seg2_wr(ir_wanted.segment.seg2);
+                pin_ir_seg3_wr(ir_wanted.segment.seg3);
+                pin_ir_seg4_wr(ir_wanted.segment.seg4);
+                break;
+            case 1: // ON->OFF, pwm ramp to 0, and stay 0
+                pin_ir_pwm_ramp(this->IRstate.brightness, 0);
+                pin_ir_seg1_wr(ir_wanted.segment.seg1);
+                pin_ir_seg2_wr(vis_wanted.segment.seg2);
+                pin_ir_seg3_wr(vis_wanted.segment.seg3);
+                pin_ir_seg4_wr(vis_wanted.segment.seg4);
+                break;
+            default:
+                return E_NOEXIST; 
+        } 
+        // update the state, at this situation, real brightness is 0, but soll
+        // brightness may differ from real brightness
+        this->IRstate            = ir_wanted;
+        this->IRstate.brightness = 0;          // But! real brightness is 0   
+        this->IRbrightness_soll  = ir_wanted.brightness; // soll brightness synchronize with extern
+        return E_OK;
+    }
 
     // either global or segments changed
     if( needchange_global || needchange_seg ){
@@ -156,7 +222,9 @@ int LedIllum::SetIrState(LedState_t ir_wanted)
         pin_ir_seg2_wr(ir_wanted.segment.seg2);
         pin_ir_seg3_wr(ir_wanted.segment.seg3);
         pin_ir_seg4_wr(ir_wanted.segment.seg4);
-        pin_ir_pwm_ramp(0, ir_wanted.brightness);
+        if(ir_wanted.global!=0){                        // only turn on is wanted, pwm will ramp high 
+            pin_ir_pwm_ramp(0, ir_wanted.brightness);   // else turn off is wanted, pwm will stay at 0 
+        }
     }else{
         pin_ir_pwm_ramp(this->IRstate.brightness, ir_wanted.brightness);
     }
