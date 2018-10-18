@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "utility/illum.h" 
 #include "utility/statuscode.h"
-#include "utility/cmd_uart.h"
 
 /* static functions decleration */ 
 static void _pwm_config(int mode);

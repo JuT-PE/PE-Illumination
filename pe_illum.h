@@ -45,9 +45,6 @@ void _error_log_write(int id, int addr, int ret);
 
 void _error_msg(int ret);
 
-int _viscode_write(unsigned int vis_brightness_wanted, unsigned int vis_seg4_wanted, unsigned int vis_seg3_wanted, unsigned int vis_seg2_wanted, unsigned int vis_seg1_wanted, unsigned int vis_en_wanted);
-
-int _ircode_write(unsigned int ir_brightness_wanted, unsigned int ir_seg4_wanted, unsigned int ir_seg3_wanted, unsigned int ir_seg2_wanted, unsigned int ir_seg1_wanted, unsigned int ir_en_wanted);
 /*
  * Command to read version
  */
@@ -69,9 +66,6 @@ int cmd_ledwrite(int argc, char *argv[]);
 
 int cmd_lightcode(int argc, char *argv[]);
 
-int cmd_viscode(int argc, char *argv[]);
-
-int cmd_ircode(int argc, char *argv[]);
 /*
  *  Instantiation of the available commands
  */
