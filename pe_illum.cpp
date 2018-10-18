@@ -68,11 +68,12 @@ int cmd_getversion(int argc, char *argv[]){
     return RUN_SUCCESS;
 }
 
-int _viscode_write(unsigned int vis_brightness_wanted, unsigned int vis_seg4_wanted, unsigned int vis_seg3_wanted, unsigned int vis_seg2_wanted, unsigned int vis_seg1_wanted, unsigned int vis_en_wanted)
+int _viscode_write(unsigned int vis_brightness_wanted, unsigned int vis_seg4_wanted, unsigned int vis_seg3_wanted, unsigned int vis_seg2_wanted, unsigned int vis_seg1_wanted, unsigned int vis_global_wanted)
 {
+    int ret = -1;
     /* check range */
     if( vis_global_wanted==1 ){                           // want to switch on
-        if( ((viscode>>1)&0xF) == 0){                     // check segment safety
+        if( (vis_seg4_wanted==0) && (vis_seg3_wanted==0) && (vis_seg2_wanted==0) && (vis_seg1_wanted==0) ){                     // check segment safety
             return E_SAFETY;
         }
     }
@@ -89,11 +90,12 @@ int _viscode_write(unsigned int vis_brightness_wanted, unsigned int vis_seg4_wan
     return E_OK;
 }
 
-int _ircode_write(unsigned int ir_brightness_wanted, unsigned int ir_seg4_wanted, unsigned int ir_seg3_wanted, unsigned int ir_seg2_wanted, unsigned int ir_seg1_wanted, unsigned int ir_en_wanted)
+int _ircode_write(unsigned int ir_brightness_wanted, unsigned int ir_seg4_wanted, unsigned int ir_seg3_wanted, unsigned int ir_seg2_wanted, unsigned int ir_seg1_wanted, unsigned int ir_global_wanted)
 {
+    int ret = -1;
     /* check range */
     if( ir_global_wanted==1 ){                           // want to switch on
-        if( ((ircode>>1)&0xF) == 0){                     // check segment safety
+        if( (ir_seg4_wanted==0) && (ir_seg3_wanted==0) && (ir_seg2_wanted==0) && (ir_seg1_wanted==0) ){                     // check segment safety
             return E_SAFETY;
         }
     }
@@ -162,27 +164,27 @@ int _lightcode_write(unsigned int viscode, unsigned int ircode){
 
 unsigned int _vis_lightcode_read(void)
 {
-    unsigned int vis_en_code   = (unsigned int) ((LedCtrl.GetVisState.global       &0x1)<<0 );
-    unsigned int vis_seg1_code = (unsigned int) ((LedCtrl.GetVisState.segment.seg1 &0x1)<<1 ); 
-    unsigned int vis_seg2_code = (unsigned int) ((LedCtrl.GetVisState.segment.seg2 &0x1)<<2 );
-    unsigned int vis_seg3_code = (unsigned int) ((LedCtrl.GetVisState.segment.seg3 &0x1)<<3 );
-    unsigned int vis_seg4_code = (unsigned int) ((LedCtrl.GetVisState.segment.seg4 &0x1)<<4 );
-    unsigned int vis_pwm_code  = (unsigned int) ((LedCtrl.GetVisState.brightness   &0xFF)<<5 );
+    unsigned int vis_en_code   = (unsigned int) ((LedCtrl.GetVisState().global       &0x1)<<0 );
+    unsigned int vis_seg1_code = (unsigned int) ((LedCtrl.GetVisState().segment.seg1 &0x1)<<1 ); 
+    unsigned int vis_seg2_code = (unsigned int) ((LedCtrl.GetVisState().segment.seg2 &0x1)<<2 );
+    unsigned int vis_seg3_code = (unsigned int) ((LedCtrl.GetVisState().segment.seg3 &0x1)<<3 );
+    unsigned int vis_seg4_code = (unsigned int) ((LedCtrl.GetVisState().segment.seg4 &0x1)<<4 );
+    unsigned int vis_pwm_code  = (unsigned int) ((LedCtrl.GetVisState().brightness   &0xFF)<<5 );
 
-    cmd_printf("VIS: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.GetVisState.brightness, LedCtrl.GetVisState.segment.seg4, LedCtrl.GetVisState.segment.seg3, LedCtrl.GetVisState.segment.seg2, LedCtrl.GetVisState.segment.seg1, LedCtrl.GetVisState.global);
+    cmd_printf("VIS: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.GetVisState().brightness, LedCtrl.GetVisState().segment.seg4, LedCtrl.GetVisState().segment.seg3, LedCtrl.GetVisState().segment.seg2, LedCtrl.GetVisState().segment.seg1, LedCtrl.GetVisState().global);
     return (vis_en_code | vis_seg1_code | vis_seg2_code | vis_seg3_code | vis_seg4_code | vis_pwm_code);  
 }
 
 unsigned int _ir_lightcode_read(void)
 {
-    unsigned int ir_en_code   = (unsigned int) ((LedCtrl.GetIrState.global       &0x1)<<0 );
-    unsigned int ir_seg1_code = (unsigned int) ((LedCtrl.GetIrState.segment.seg1 &0x1)<<1 ); 
-    unsigned int ir_seg2_code = (unsigned int) ((LedCtrl.GetIrState.segment.seg2 &0x1)<<2 );
-    unsigned int ir_seg3_code = (unsigned int) ((LedCtrl.GetIrState.segment.seg3 &0x1)<<3 );
-    unsigned int ir_seg4_code = (unsigned int) ((LedCtrl.GetIrState.segment.seg4 &0x1)<<4 );
-    unsigned int ir_pwm_code  = (unsigned int) ((LedCtrl.GetIrState.brightness   &0xFF)<<5 );
+    unsigned int ir_en_code   = (unsigned int) ((LedCtrl.GetIrState().global       &0x1)<<0 );
+    unsigned int ir_seg1_code = (unsigned int) ((LedCtrl.GetIrState().segment.seg1 &0x1)<<1 ); 
+    unsigned int ir_seg2_code = (unsigned int) ((LedCtrl.GetIrState().segment.seg2 &0x1)<<2 );
+    unsigned int ir_seg3_code = (unsigned int) ((LedCtrl.GetIrState().segment.seg3 &0x1)<<3 );
+    unsigned int ir_seg4_code = (unsigned int) ((LedCtrl.GetIrState().segment.seg4 &0x1)<<4 );
+    unsigned int ir_pwm_code  = (unsigned int) ((LedCtrl.GetIrState().brightness   &0xFF)<<5 );
 
-    cmd_printf("IR: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.GetIrState.brightness, LedCtrl.GetIrState.segment.seg4, LedCtrl.GetIrState.segment.seg3, LedCtrl.GetIrState.segment.seg2, LedCtrl.GetIrState.segment.seg1, LedCtrl.GetIrState.global);
+    cmd_printf("IR: pwm:%d seg4:%d seg3:%d seg2:%d seg1:%d en:%d\n", LedCtrl.GetIrState().brightness, LedCtrl.GetIrState().segment.seg4, LedCtrl.GetIrState().segment.seg3, LedCtrl.GetIrState().segment.seg2, LedCtrl.GetIrState().segment.seg1, LedCtrl.GetIrState().global);
     return (ir_en_code | ir_seg1_code | ir_seg2_code | ir_seg3_code | ir_seg4_code | ir_pwm_code);  
 }
 
